@@ -1,0 +1,19 @@
+[
+  {
+    "Type": "CUSTOM_JAR",
+    "Name": "WikiLambdaSpeedLayerV9",
+    "ActionOnFailure": "CONTINUE",
+    "Jar": "command-runner.jar",
+    "Args": [
+      "spark-submit",
+      "s3://wiki-lambda-x23352370/spark-scripts/speed_layer_v9.py",
+      "--stream-name", "wiki-lambda-stream",
+      "--region", "us-east-1",
+      "--output-s3", "s3://wiki-lambda-x23352370/speed_layer_output_v9",
+      "--baseline-s3", "s3://wiki-lambda-x23352370/processed/article_baseline/",
+      "--window-seconds", "300",
+      "--batch-seconds", "5",
+      "--top-n", "10"
+    ]
+  }
+]

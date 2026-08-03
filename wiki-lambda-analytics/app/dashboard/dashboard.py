@@ -453,7 +453,7 @@ def live_dashboard():
 
             st.dataframe(
                 display_df,
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
             )
 
@@ -475,7 +475,7 @@ def live_dashboard():
 
             st.dataframe(
                 trending_df,
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
             )
 
@@ -710,7 +710,7 @@ if (
 
     st.dataframe(
         baseline_display,
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
     )
 

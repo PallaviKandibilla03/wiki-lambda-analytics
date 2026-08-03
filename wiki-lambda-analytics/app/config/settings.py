@@ -73,7 +73,7 @@ class Settings(BaseSettings):
         "in-window edit count exceeds this threshold and no historical baseline exists.",
     )
     trend_score_threshold: float = Field(
-        default=1.2, description="Minimum trend score (current/baseline) to be considered trending."
+        default=0.5, description="Minimum trend score (current/baseline) to be considered trending."
     )
     trending_top_n: int = Field(default=10, description="Number of trending articles to report.")
 
