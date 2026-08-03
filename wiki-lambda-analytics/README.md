@@ -1,155 +1,273 @@
 # Wiki Lambda Analytics
 
-A real-time Wikipedia stream analytics platform built with a **Lambda
-Architecture**: a Speed Layer for low-latency real-time metrics, a Batch
-Layer (DuckDB) for historical/aggregate analytics, and a Serving Layer
-(FastAPI) that unifies both, visualized through a Streamlit dashboard.
+## AWS Lambda Architecture for Real-Time Wikimedia Analytics
 
-## Architecture Overview
+A cloud-based analytics platform that processes Wikimedia Recent Changes events using an AWS Lambda Architecture. The system combines real-time stream processing with historical batch analytics to identify trending articles by comparing live editing activity against historical article baselines.
+
+---
+
+## Project Overview
+
+Wikipedia receives thousands of editing events continuously. Detecting unusual activity requires both:
+
+- **Real-time processing** to identify current trends.
+- **Historical analysis** to understand normal article behaviour.
+
+This project implements a Lambda Architecture on AWS that integrates:
+
+- A **Speed Layer** for near real-time analytics.
+- A **Batch Layer** for historical baseline generation.
+- A **Serving Layer** for dashboard visualization.
+
+---
+
+## Architecture
 
 ```
-Wikimedia SSE Stream
-        │
-        ▼
-  Producer (connection.py + parser.py + processor.py)
-        │  (validated, filtered WikiEvent)
-        ▼
-    Dispatcher (fan-out, non-blocking)
-     ┌──────┴──────┐
-     ▼             ▼
-StorageWorker   SpeedWorker
-     │             │
-     ▼             ▼
-  DuckDB      SlidingWindow (5 min default)
- (Batch Layer)  (Speed Layer)
-     │             │
-     └──────┬──────┘
-            ▼
-     Serving Layer (FastAPI)
-            │
-            ▼
-   Streamlit Dashboard
+Wikimedia Recent Changes API
+              |
+              v
+        Amazon Kinesis
+              |
+              v
+     Amazon Kinesis Firehose
+              |
+              +----------------+
+              |                |
+              v                v
+
+        Amazon S3 Raw Data   Spark Streaming
+                              (Amazon EMR)
+                                    |
+                                    v
+                           Real-Time Trend Detection
+                                    |
+                                    v
+                              CloudWatch Metrics
+
+
+Historical Data
+      |
+      v
+ Amazon EMR PySpark
+      |
+      v
+ Parquet Dataset
+      |
+      v
+ AWS Glue Catalog
+      |
+      v
+ Amazon Athena
+
+
+Both layers
+      |
+      v
+ Streamlit Dashboard
 ```
 
-## 1. Prerequisites
+---
 
-- Python 3.11+
-- Internet access to `stream.wikimedia.org`
+# AWS Services Used
 
-## 2. Installation
+| Service | Purpose |
+|---|---|
+| Amazon Kinesis | Real-time Wikimedia event ingestion |
+| Kinesis Firehose | Delivery of streaming data into S3 |
+| Amazon S3 | Persistent storage layer |
+| Amazon EMR | Spark batch and streaming processing |
+| AWS Glue | Metadata cataloguing |
+| Amazon Athena | Analytical querying |
+| Amazon CloudWatch | Monitoring and performance metrics |
+| Streamlit | Analytics dashboard |
+
+---
+
+# Speed Layer
+
+The speed layer processes live Wikimedia events using Spark.
+
+Features:
+
+- Five-minute sliding window analytics.
+- Real-time article edit counting.
+- Trending article detection.
+- Comparison against historical baselines.
+- CloudWatch performance monitoring.
+
+Metrics collected:
+
+- Processing latency
+- Window event count
+- Ingestion rate
+- Trending article count
+
+Example output:
+
+```
+Events in Window: 328
+Distinct Articles: 283
+Trending Articles: 5
+```
+
+---
+
+# Batch Layer
+
+The batch layer processes historical Wikimedia data using PySpark on Amazon EMR.
+
+Responsibilities:
+
+- Historical event aggregation.
+- Article edit frequency calculation.
+- Baseline generation.
+- Storage of analytical datasets in Parquet format.
+
+The generated historical baselines are used by the speed layer to calculate abnormal activity.
+
+---
+
+# Trend Detection
+
+Trending score:
+
+```
+Trend Score =
+Current Edit Rate /
+Historical Article Baseline
+```
+
+Interpretation:
+
+| Score | Meaning |
+|---|---|
+| < 1 | Below normal activity |
+| = 1 | Normal activity |
+| > 1 | Increased activity |
+
+---
+
+# Dashboard
+
+The Streamlit dashboard provides:
+
+## Real-Time Analytics
+
+- Current event activity
+- Trending articles
+- Sliding window statistics
+- Processing latency
+
+## Historical Analytics
+
+- Total historical events
+- Article statistics
+- Most edited articles
+- Baseline information
+
+---
+
+# Performance Evaluation
+
+The system was evaluated using AWS CloudWatch metrics.
+
+Generated measurements:
+
+- Processing latency vs ingestion rate
+- Processing latency vs window load
+- Batch processing speedup
+- Streaming throughput over time
+
+Observed results:
+
+- Average speed-layer processing latency remained below 300 ms after warm-up.
+- Five-minute sliding windows handled increasing event volumes without significant degradation.
+- Streaming ingestion remained stable throughout testing.
+
+---
+
+# Repository Structure
+
+```
+wiki-lambda-analytics/
+
+├── aws/
+│   └── spark/
+│       ├── batch_layer_job.py
+│       └── speed_layer_streaming.py
+│
+├── evidence/
+│   ├── aws/
+│   ├── graphs/
+│   └── outputs/
+│
+├── app/
+│   └── dashboard/
+│
+├── speed_layer_v9.py
+├── batch_layer_job.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+# Running the Dashboard
+
+Install dependencies:
 
 ```bash
-cd wiki-lambda-analytics
-python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## 3. Running the Backend (Ingestion Pipeline + FastAPI)
-
-From the project root:
-
-```bash
-python application.py
-```
-
-This single process will:
-
-1. Initialize the DuckDB database at `./data/wiki.db`.
-2. Start the `StorageWorker` and `SpeedWorker` background threads.
-3. Start the `ProducerThread`, which connects to the Wikimedia
-   `recentchange` SSE stream with automatic reconnect/backoff.
-4. Launch the FastAPI server (Uvicorn) on `http://localhost:8000`.
-
-You should see log output confirming the SSE connection and Uvicorn
-startup. Leave this process running.
-
-### API Documentation
-
-Once running, interactive API docs (Swagger UI) are available at:
-
-```
-http://localhost:8000/docs
-```
-
-Available endpoints:
-
-| Endpoint          | Description                                         |
-|-------------------|------------------------------------------------------|
-| `GET /health`     | Pipeline health across producer/speed/batch layers    |
-| `GET /live`       | Real-time speed-layer metrics + trending articles     |
-| `GET /trending`   | Currently trending articles                            |
-| `GET /history`    | Batch-layer historical/aggregate statistics            |
-| `GET /events`     | Last N ingested (post-filter) events                   |
-| `GET /metrics/system` | CPU, memory, and stream ingestion statistics        |
-
-## 4. Running the Dashboard
-
-In a **second terminal** (with the same virtual environment activated),
-from the project root:
+Run:
 
 ```bash
 streamlit run app/dashboard/dashboard.py
 ```
 
-Streamlit will print a local URL (typically `http://localhost:8501`).
-Open it in your browser. The dashboard polls the FastAPI backend over
-HTTP and auto-refreshes on the interval configured in its sidebar.
+---
 
-> The backend (`application.py`) must already be running for the
-> dashboard to display data.
+# Research Objective
 
-## 5. Configuration
+This project investigates:
 
-All settings are centralized in `app/config/settings.py` and can be
-overridden via environment variables prefixed with `WLA_`, e.g.:
+> How can a Lambda Architecture implemented on AWS combine real-time stream processing and historical analytics to identify abnormal Wikimedia activity with low latency?
 
-```bash
-export WLA_WINDOW_SIZE_SECONDS=600
-export WLA_API_PORT=8080
-```
+---
 
-or via a `.env` file in the project root.
+# Dataset
 
-Key settings:
+Source:
 
-- `stream_url` — Wikimedia EventStreams source URL.
-- `window_size_seconds` — Speed layer sliding window size (default 300s).
-- `duckdb_path` — Path to the DuckDB database file.
-- `reconnect_initial_backoff_seconds` / `reconnect_max_backoff_seconds` —
-  SSE reconnect backoff bounds.
-- `filter_event_type` / `filter_namespace` / `filter_exclude_bots` —
-  Ingestion filter criteria.
-- `trend_score_threshold` / `trend_min_edits_fallback` — Trend detection
-  tuning.
+Wikimedia Recent Changes Stream
 
-## 6. Project Structure
+https://stream.wikimedia.org/
 
-See the module docstrings in each file under `app/` for details on that
-component's responsibility. High-level layers:
+The dataset contains real-time Wikipedia editing events including:
 
-- `app/producer/` — SSE ingestion, parsing, and filtering.
-- `app/workers/` — Dispatcher fan-out and per-layer worker threads.
-- `app/storage/` + `app/batch_layer/` — DuckDB persistence and analytical queries.
-- `app/speed_layer/` — Sliding window, real-time metrics, trend detection.
-- `app/serving_layer/` — Unified service coordinating both layers.
-- `app/api/` — FastAPI HTTP interface.
-- `app/dashboard/` — Streamlit UI.
-- `app/monitoring/` — Cross-cutting pipeline statistics.
+- Article title
+- User information
+- Edit metadata
+- Timestamp information
 
-## 7. Stopping the Platform
+---
 
-Press `Ctrl+C` in the terminal running `application.py` to gracefully
-stop the producer and worker threads. Stop the Streamlit dashboard with
-`Ctrl+C` in its own terminal.
+# Future Improvements
 
-## 8. Troubleshooting
+Possible extensions:
 
-- **No data in the dashboard**: confirm `application.py` is running and
-  reachable at the URL configured in `dashboard_api_base_url`.
-- **`database is locked` errors**: DuckDB access is serialized internally
-  via a lock in `DuckDBWrapper`; ensure only one `application.py` process
-  is running against the same `duckdb_path`.
-- **SSE connection drops frequently**: check network/firewall access to
-  `stream.wikimedia.org`; the producer will automatically retry with
-  exponential backoff.
+- Kubernetes-based deployment
+- Automated anomaly detection models
+- Larger-scale benchmarking
+- Additional visualization capabilities
+
+---
+
+# Author
+
+Pallavi Kandibilla
+
+MSc Cloud Computing  
+National College of Ireland
