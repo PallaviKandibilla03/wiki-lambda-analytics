@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.env
+
+# IDE
+.vscode/
+
+# Secrets
+*.pem
+.aws/
+
+# Databases
+*.db
+*.db-wal
+*.sqlite
+
+
+# Logs only
+*.log
+*.gz
+
+#
+# Keep project text files
+!requirements.txt
+!README.md
+!evidence/**/*.txt
+
+# Temporary files
+*.backup
+*.tmp
+
+# Generated outputs
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db

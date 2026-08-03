@@ -1,0 +1,33 @@
+WIKI LAMBDA ANALYTICS - BATCH PERFORMANCE BENCHMARK
+===================================================
+
+AWS EMR Cluster:
+j-2HPZBB6XFFBKZ
+
+Configuration:
+EMR cluster: 1 MASTER + 2 CORE nodes
+Instance type: m5.xlarge
+
+1-Executor Benchmark
+--------------------
+Start: 2026-08-02T23:44:55.496+01:00
+End:   2026-08-02T23:46:15.551+01:00
+Runtime: 80.055 seconds
+
+2-Executor Benchmark
+--------------------
+Start: 2026-08-02T23:47:35.580+01:00
+End:   2026-08-02T23:48:53.655+01:00
+Runtime: 78.075 seconds
+
+Speedup
+-------
+Speedup = T1 / T2
+        = 80.055 / 78.075
+        = 1.025x
+
+Interpretation:
+Increasing Spark executor parallelism from one to two produced
+a modest speedup of approximately 1.025x. The limited improvement
+indicates that fixed Spark startup, scheduling, S3 I/O and workload
+size dominate execution time for this dataset.

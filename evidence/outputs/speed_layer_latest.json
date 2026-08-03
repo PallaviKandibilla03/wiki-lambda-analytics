@@ -1,0 +1,64 @@
+{
+  "generated_at": "2026-08-02T23:28:58.836472+00:00",
+  "window_seconds": 300,
+  "total_events_in_window": 302,
+  "distinct_articles_in_window": 253,
+  "trending_articles": [
+    {
+      "title": "Ananda Vihara",
+      "recent_edits": 8,
+      "current_edits_per_hour": 96.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    },
+    {
+      "title": "Bastia",
+      "recent_edits": 4,
+      "current_edits_per_hour": 48.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    },
+    {
+      "title": "Luiggi Giafferi",
+      "recent_edits": 3,
+      "current_edits_per_hour": 36.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    },
+    {
+      "title": "Thommas Kane Byrne",
+      "recent_edits": 3,
+      "current_edits_per_hour": 36.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    },
+    {
+      "title": "Konevsky Monastery",
+      "recent_edits": 3,
+      "current_edits_per_hour": 36.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    },
+    {
+      "title": "Shrewsbury Folk Festival",
+      "recent_edits": 3,
+      "current_edits_per_hour": 36.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    },
+    {
+      "title": "Mama's Bad Boy",
+      "recent_edits": 3,
+      "current_edits_per_hour": 36.0,
+      "baseline_edits_per_hour": null,
+      "trend_score": null,
+      "baseline_available": false
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+
+FullName                                                                                           Length LastWriteTime      
+--------                                                                                           ------ -------------      
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\01_kinesis_stream.json                   1376 03-08-2026 00:28:07
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\02_firehose.json                         4830 03-08-2026 00:28:09
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\03_emr_cluster.json                     10424 03-08-2026 00:28:11
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\04_emr_instances.json                    6838 03-08-2026 00:28:13
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\05_autoscaling_group.json                6136 03-08-2026 00:28:15
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\06_autoscaling_policy.json               3260 03-08-2026 00:28:17
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\07_scaling_activities.json              25744 03-08-2026 00:28:19
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\08_cloudwatch_metrics.json               1650 03-08-2026 00:29:28
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\09_glue_tables.json                     27400 03-08-2026 00:29:56
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\aws\10_s3_encryption.json                     894 03-08-2026 00:31:02
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\graphs\latency_vs_ingestion_rate.png        87452 03-08-2026 00:22:08
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\graphs\latency_vs_window_load.png          118555 03-08-2026 00:18:16
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\graphs\speedup_vs_executors.png             98583 03-08-2026 00:18:15
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\graphs\throughput_over_time.png            193190 03-08-2026 00:18:16
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\batch_benchmark_results.txt           838 03-08-2026 00:27:19
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\batch_layer_s3_outputs.txt           2608 03-08-2026 00:28:38
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\benchmark_1worker_outputs.txt        2886 03-08-2026 00:28:40
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\benchmark_2workers_outputs.txt       2912 03-08-2026 00:28:45
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\cloudwatch_ingestion_eps.json       72656 03-08-2026 00:29:23
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\cloudwatch_processing_latency.json   8966 03-08-2026 00:29:24
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\cloudwatch_window_events.json       34322 03-08-2026 00:29:26
+C:\Users\palla\Downloads\wiki-lambda-analytics\evidence\outputs\speed_layer_latest.json              1654 03-08-2026 00:28:59
+
+
+
