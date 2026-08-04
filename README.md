@@ -1,273 +1,260 @@
-# Wiki Lambda Analytics
+# Real-Time Wikimedia Analytics Using AWS Lambda Architecture
 
-## AWS Lambda Architecture for Real-Time Wikimedia Analytics
+## Overview
 
-A cloud-based analytics platform that processes Wikimedia Recent Changes events using an AWS Lambda Architecture. The system combines real-time stream processing with historical batch analytics to identify trending articles by comparing live editing activity against historical article baselines.
+This project implements a cloud-based **Lambda Architecture** for analysing real-time Wikimedia editing activity using AWS services.
+
+The system combines:
+
+- **Speed Layer** → Real-time stream processing for detecting trending articles
+- **Batch Layer** → Historical analytics and baseline generation
+- **Serving Layer** → Combines real-time and historical insights for visualisation
+
+The objective is to identify Wikipedia articles experiencing unusual editing activity by comparing current edit rates against historical behaviour.
+
+The solution is implemented using AWS managed services including Amazon EC2, Kinesis, EMR, S3, Glue, Athena, and Streamlit.
+
+---
+The system follows a Lambda Architecture design:
+<img width="606" height="635" alt="image" src="https://github.com/user-attachments/assets/896f56fc-2862-4f35-86cd-c25b9ef439ca" />
 
 ---
 
-## Project Overview
+# Project Objectives
 
-Wikipedia receives thousands of editing events continuously. Detecting unusual activity requires both:
+The main objectives of this project are:
 
-- **Real-time processing** to identify current trends.
-- **Historical analysis** to understand normal article behaviour.
-
-This project implements a Lambda Architecture on AWS that integrates:
-
-- A **Speed Layer** for near real-time analytics.
-- A **Batch Layer** for historical baseline generation.
-- A **Serving Layer** for dashboard visualization.
-
----
-
-## Architecture
-
-```
-Wikimedia Recent Changes API
-              |
-              v
-        Amazon Kinesis
-              |
-              v
-     Amazon Kinesis Firehose
-              |
-              +----------------+
-              |                |
-              v                v
-
-        Amazon S3 Raw Data   Spark Streaming
-                              (Amazon EMR)
-                                    |
-                                    v
-                           Real-Time Trend Detection
-                                    |
-                                    v
-                              CloudWatch Metrics
-
-
-Historical Data
-      |
-      v
- Amazon EMR PySpark
-      |
-      v
- Parquet Dataset
-      |
-      v
- AWS Glue Catalog
-      |
-      v
- Amazon Athena
-
-
-Both layers
-      |
-      v
- Streamlit Dashboard
-```
+- Build a scalable AWS Lambda Architecture for Wikimedia analytics.
+- Ingest continuous Wikimedia events using Amazon Kinesis.
+- Implement real-time stream processing using Apache Spark Streaming.
+- Generate historical article baselines using PySpark.
+- Detect trending articles using current activity compared with historical behaviour.
+- Evaluate latency, throughput, and scalability of the cloud architecture.
 
 ---
 
 # AWS Services Used
 
-| Service | Purpose |
+| Component | Technology |
 |---|---|
-| Amazon Kinesis | Real-time Wikimedia event ingestion |
-| Kinesis Firehose | Delivery of streaming data into S3 |
-| Amazon S3 | Persistent storage layer |
-| Amazon EMR | Spark batch and streaming processing |
-| AWS Glue | Metadata cataloguing |
-| Amazon Athena | Analytical querying |
-| Amazon CloudWatch | Monitoring and performance metrics |
-| Streamlit | Analytics dashboard |
+| Data Source | Wikimedia Recent Changes EventStream |
+| Compute | Amazon EC2 |
+| Auto Scaling | EC2 Auto Scaling Group |
+| Streaming Ingestion | Amazon Kinesis Data Streams |
+| Data Delivery | Amazon Kinesis Firehose |
+| Stream Processing | Apache Spark Streaming |
+| Processing Platform | Amazon EMR |
+| Batch Processing | PySpark |
+| Storage | Amazon S3 |
+| Metadata Management | AWS Glue Data Catalog |
+| Query Engine | Amazon Athena |
+| Monitoring | Amazon CloudWatch |
+| Visualisation | Streamlit |
 
 ---
 
-# Speed Layer
+# System Components
 
-The speed layer processes live Wikimedia events using Spark.
+## 1. Data Ingestion Layer
 
-Features:
+The producer application continuously collects events from the Wikimedia EventStream API.
 
-- Five-minute sliding window analytics.
-- Real-time article edit counting.
+Each event contains information such as:
+
+- Article title
+- Edit timestamp
+- Namespace
+- User information
+- Edit metadata
+
+The Python producer application:
+
+1. Connects to Wikimedia EventStream.
+2. Parses incoming JSON events.
+3. Publishes events into Amazon Kinesis Data Streams.
+
+The producer runs on Amazon EC2 and is deployed using an Auto Scaling Group.
+
+---
+
+## 2. Speed Layer - Real-Time Processing
+
+The speed layer provides low-latency analytics over incoming Wikimedia events.
+
+**Implementation:**
+- Apache Spark Streaming
+- Amazon EMR
+- Amazon Kinesis Data Streams
+
+**Features:**
+- Five-minute sliding window processing.
+- Real-time event aggregation.
+- Article activity calculation.
 - Trending article detection.
-- Comparison against historical baselines.
-- CloudWatch performance monitoring.
 
-Metrics collected:
+## 3. Batch Layer - Historical Analytics
 
-- Processing latency
-- Window event count
-- Ingestion rate
-- Trending article count
+The batch layer generates historical context required for trend detection.
 
-Example output:
+**Implementation:**
+- Apache Spark
+- PySpark
+- Amazon EMR
+- Amazon S3
 
-```
-Events in Window: 328
-Distinct Articles: 283
-Trending Articles: 5
-```
+**The batch layer calculates:**
+- Article edit baselines
+- Hourly edit rates
+- Top edited articles
+- Namespace statistics
+- Bot versus human activity
 
----
+Processed datasets are stored in Amazon S3 and registered using AWS Glue Data Catalog.
 
-# Batch Layer
-
-The batch layer processes historical Wikimedia data using PySpark on Amazon EMR.
-
-Responsibilities:
-
-- Historical event aggregation.
-- Article edit frequency calculation.
-- Baseline generation.
-- Storage of analytical datasets in Parquet format.
-
-The generated historical baselines are used by the speed layer to calculate abnormal activity.
+**Available Athena tables:**
+- `article_baseline`
+- `batch_summary`
+- `bot_vs_human`
+- `edit_rate_hourly`
+- `namespace_breakdown`
+- `top_articles`
 
 ---
 
-# Trend Detection
+## 4. Serving and Visualisation Layer
 
-Trending score:
+The serving layer combines:
+- Real-time speed-layer outputs
+- Historical batch analytics
 
-```
-Trend Score =
-Current Edit Rate /
-Historical Article Baseline
-```
-
-Interpretation:
-
-| Score | Meaning |
-|---|---|
-| < 1 | Below normal activity |
-| = 1 | Normal activity |
-| > 1 | Increased activity |
+**The Streamlit dashboard provides:**
+- **Real-Time Insights:** Current event activity, trending articles, sliding window statistics, latest processing results.
+- **Historical Insights:** Top edited articles, historical baselines, article activity trends, analytical summaries.
 
 ---
 
-# Dashboard
+# Auto Scaling Configuration
 
-The Streamlit dashboard provides:
+The producer component uses an EC2 Auto Scaling Group.
 
-## Real-Time Analytics
+**Configuration:**
+- **Minimum Instances:** 1
+- **Maximum Instances:** 4
+- **Instance Type:** `t3.micro`
 
-- Current event activity
-- Trending articles
-- Sliding window statistics
-- Processing latency
+Scaling policies are configured using AWS Auto Scaling target tracking.
 
-## Historical Analytics
+**Benefits:**
+- Handles increased ingestion workload.
+- Maintains availability.
+- Reduces unnecessary resource usage during low traffic periods.
 
-- Total historical events
-- Article statistics
-- Most edited articles
-- Baseline information
-
+---
 ---
 
 # Performance Evaluation
 
-The system was evaluated using AWS CloudWatch metrics.
+The system was evaluated using:
+- Processing latency
+- Event throughput
+- Sliding-window workload
+- Spark executor scaling
 
-Generated measurements:
+**Observed behaviour:**
+- Processed more than 1000 Wikimedia events per five-minute window.
+- Maintained sub-second processing latency.
+- Generated trending article results continuously.
+- Successfully integrated batch and streaming analytics.
 
-- Processing latency vs ingestion rate
-- Processing latency vs window load
-- Batch processing speedup
-- Streaming throughput over time
+Scalability Analysis
+Components that scaled effectively
+Amazon Kinesis: Provided reliable ingestion and buffering between producers and processors.
 
-Observed results:
+Amazon S3: Provided scalable storage for raw events, processed datasets, and analytical outputs.
 
-- Average speed-layer processing latency remained below 300 ms after warm-up.
-- Five-minute sliding windows handled increasing event volumes without significant degradation.
-- Streaming ingestion remained stable throughout testing.
+Independent Lambda Layers: The separation between batch and speed layers allowed independent processing without affecting real-time analytics.
 
----
+Limitations
+AWS Learner Lab resource restrictions limited large-scale benchmarking.
 
-# Repository Structure
+Historical baselines were available only for articles with sufficient history.
 
-```
+Large EMR cluster scaling experiments were not possible.
+
+Future Improvements
+Continuous updating of article baselines.
+
+Machine learning based anomaly detection.
+
+Larger EMR cluster benchmarking.
+
+Automated infrastructure deployment using Terraform or CloudFormation.
+
+Improved monitoring and alerting.
+
+Multi-region deployment for higher availability.
+
+Repository Structure
+Plaintext
 wiki-lambda-analytics/
-
-├── aws/
-│   └── spark/
-│       ├── batch_layer_job.py
-│       └── speed_layer_streaming.py
 │
-├── evidence/
-│   ├── aws/
-│   ├── graphs/
-│   └── outputs/
+├── producer/
+│   └── kinesis_producer.py
 │
-├── app/
-│   └── dashboard/
+├── speed_layer/
+│   └── spark_streaming.py
 │
-├── speed_layer_v9.py
-├── batch_layer_job.py
+├── batch_layer/
+│   └── pyspark_jobs/
+│
+├── dashboard/
+│   └── streamlit_dashboard.py
+│
+├── docs/
+│   ├── architecture/
+│   │   └── architecture.png
+│   │
+│   └── screenshots/
+│
 ├── requirements.txt
+│
 └── README.md
-```
+Technologies
+Python
 
----
+Apache Spark
 
-# Running the Dashboard
+PySpark
 
-Install dependencies:
+Spark Streaming
 
-```bash
-pip install -r requirements.txt
-```
+Amazon EC2
 
-Run:
+Amazon Kinesis
 
-```bash
-streamlit run app/dashboard/dashboard.py
-```
+Amazon EMR
 
----
+Amazon S3
 
-# Research Objective
+AWS Glue
 
-This project investigates:
+Amazon Athena
 
-> How can a Lambda Architecture implemented on AWS combine real-time stream processing and historical analytics to identify abnormal Wikimedia activity with low latency?
+Streamlit
 
----
+Project Demonstration
+Dashboard
+(Add screenshots here)
 
-# Dataset
+Performance Evaluation
+(Add screenshots here)
 
-Source:
+Authors
+Cloud Computing Project
 
-Wikimedia Recent Changes Stream
-
-https://stream.wikimedia.org/
-
-The dataset contains real-time Wikipedia editing events including:
-
-- Article title
-- User information
-- Edit metadata
-- Timestamp information
-
----
-
-# Future Improvements
-
-Possible extensions:
-
-- Kubernetes-based deployment
-- Automated anomaly detection models
-- Larger-scale benchmarking
-- Additional visualization capabilities
-
----
-
-# Author
-
-Pallavi Kandibilla
-
-MSc Cloud Computing  
 National College of Ireland
+
+MSc in Cloud Computing
+
+License
+This project was developed for academic purposes.
